@@ -30,6 +30,8 @@
             background: white;
             border: 3px solid #a9b9a8;
             border-radius: 20px;
+            touch-action: none;
+            display: block;
         }
 
         button {
@@ -39,7 +41,6 @@
             border-radius: 15px;
             font-size: 18px;
             color: white;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -50,11 +51,53 @@
 
     <p>Scrivi qui con la tua MetaPen ✏️</p>
 
-    <canvas class="area-scrittura"></canvas>
+    <canvas class="area-scrittura" id="canvas"></canvas>
 
     <br><br>
 
     <button>Trasforma in testo</button>
+
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        function ridimensionaCanvas() {
+            const rect = canvas.getBoundingClientRect();
+
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "#526b5b";
+        }
+
+        ridimensionaCanvas();
+
+        let scrivendo = false;
+
+        canvas.addEventListener("pointerdown", function(event) {
+            scrivendo = true;
+
+            ctx.beginPath();
+            ctx.moveTo(event.offsetX, event.offsetY);
+        });
+
+        canvas.addEventListener("pointermove", function(event) {
+            if (!scrivendo) return;
+
+            ctx.lineTo(event.offsetX, event.offsetY);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener("pointerup", function() {
+            scrivendo = false;
+        });
+
+        canvas.addEventListener("pointerleave", function() {
+            scrivendo = false;
+        });
+    </script>
 
 </body>
 </html>
