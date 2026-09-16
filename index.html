@@ -21,6 +21,7 @@
             box-sizing: border-box;
             user-select: none;
             -webkit-user-select: none;
+            touch-action: none;
         }
 
         body {
@@ -32,8 +33,6 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            /* Impedisce lo scrolling di sistema su iPad */
-            touch-action: none;
         }
 
         header {
@@ -73,7 +72,7 @@
             gap: 6px;
         }
 
-        button:hover, button.active {
+        button.active {
             background: var(--accent-green);
             color: white;
             border-color: var(--accent-green);
@@ -83,13 +82,6 @@
             background: #e74c3c;
             color: white;
             border-color: #e74c3c;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
         }
 
         .workspace {
@@ -103,10 +95,12 @@
         }
 
         #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             touch-action: none;
-            display: block;
         }
 
         .text-layer {
@@ -151,6 +145,7 @@
             align-items: center;
             gap: 10px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 5;
         }
 
         .audio-bar.active {
@@ -190,74 +185,68 @@
 
         let currentTool = 'pen';
         let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
 
-        // Gestione Risoluzione Retina (iPad / Tablet)
-        function resizeCanvas() {
-            const rect = workspace.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-
-            ctx.scale(dpr, dpr);
-            canvas.style.width = `${rect.width}px`;
-            canvas.style.height = `${rect.height}px`;
-
-            setupContext();
-        }
-
-        function setupContext() {
+        // Inizializzazione pulita del Canvas
+        function initCanvas() {
+            canvas.width = workspace.clientWidth;
+            canvas.height = workspace.clientHeight;
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
         }
 
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        window.addEventListener('resize', initCanvas);
+        setTimeout(initCanvas, 100);
 
-        // OTTIMITZAZIONE SCRITTURA + PALM REJECTION
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        // GESTIONE TRATTO IPAD E TOUCH
         canvas.addEventListener("pointerdown", (e) => {
             if (currentTool === 'text') return;
-
-            // Se si usa la stilo, ignora le dita e il palmo della mano
-            if (e.pointerType === "touch" && e.width > 10) return;
+            e.preventDefault();
 
             isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            lastX = e.clientX - rect.left;
-            lastY = e.clientY - rect.top;
+            const pos = getPos(e);
+
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
         });
 
         canvas.addEventListener("pointermove", (e) => {
             if (!isDrawing || currentTool === 'text') return;
+            e.preventDefault();
 
-            const rect = canvas.getBoundingClientRect();
-            const currentX = e.clientX - rect.left;
-            const currentY = e.clientY - rect.top;
-
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(currentX, currentY);
+            const pos = getPos(e);
 
             if (currentTool === 'pen') {
                 ctx.globalCompositeOperation = "source-over";
                 ctx.strokeStyle = "#526b5b";
                 ctx.lineWidth = 3;
+                ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
             } else if (currentTool === 'eraser') {
                 ctx.globalCompositeOperation = "destination-out";
-                ctx.lineWidth = 25;
+                ctx.lineWidth = 30;
+                ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
             }
-
-            lastX = currentX;
-            lastY = currentY;
         });
 
-        const stopDrawing = () => { isDrawing = false; };
+        function stopDrawing(e) {
+            if (isDrawing) {
+                ctx.closePath();
+                isDrawing = false;
+            }
+        }
+
         canvas.addEventListener("pointerup", stopDrawing);
         canvas.addEventListener("pointerleave", stopDrawing);
+        canvas.addEventListener("pointercancel", stopDrawing);
 
         // MODALITÀ TASTIERA
         workspace.addEventListener("click", (e) => {
