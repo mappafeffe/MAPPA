@@ -37,7 +37,7 @@
             overflow: hidden;
         }
 
-        /* BARRA SUPERIORE STILE FREENOTES */
+        /* BARRA SUPERIORE */
         header {
             background: rgba(244, 236, 225, 0.95);
             padding: 8px 20px;
@@ -74,7 +74,7 @@
             background: rgba(0,0,0,0.05);
         }
 
-        /* STRUTTURA PRINCIPALE (SIDEBAR + WORKSPACE) */
+        /* MAIN CONTAINER */
         .main-container {
             display: flex;
             flex: 1;
@@ -82,26 +82,26 @@
             overflow: hidden;
         }
 
-        /* BARRA STRUMENTI LATERALE */
+        /* SIDEBAR STRUMENTI */
         .toolbar-side {
-            width: 70px;
+            width: 75px;
             background: var(--sidebar-bg);
             border-right: 1px solid #dcd0c0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 15px;
-            gap: 12px;
+            padding: 15px 0;
+            gap: 10px;
             z-index: 5;
         }
 
         .tool-btn {
-            width: 48px;
+            width: 50px;
             height: 48px;
             border-radius: 12px;
             border: none;
             background: transparent;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -123,13 +123,39 @@
             color: var(--accent-green);
         }
 
+        /* SELETTORE SPESSORE */
+        .size-picker {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 5px;
+        }
+
+        .size-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid #dcd0c0;
+            background: white;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--accent-green);
+            cursor: pointer;
+        }
+
+        .size-btn.active {
+            background: var(--accent-green);
+            color: white;
+            border-color: var(--accent-green);
+        }
+
         /* SELEZIONE COLORI */
         .color-picker {
             margin-top: auto;
-            margin-bottom: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
+            align-items: center;
         }
 
         .color-dot {
@@ -146,7 +172,7 @@
             border-color: var(--accent-green);
         }
 
-        /* AREA QUADERNO / CANVAS */
+        /* WORKSPACE */
         .workspace {
             position: relative;
             flex: 1;
@@ -155,8 +181,6 @@
             border-radius: 12px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.05);
             overflow: hidden;
-
-            /* Sfondo Quadretto / Dot Grid stile FreeNotes */
             background-image: radial-gradient(#e0d7cb 1.5px, transparent 1.5px);
             background-size: 24px 24px;
         }
@@ -200,7 +224,6 @@
             border-radius: 8px;
         }
 
-        /* RECORDER BAR */
         .audio-bar {
             position: absolute;
             bottom: 15px;
@@ -230,11 +253,9 @@
         <div class="header-right">
             <button class="btn-icon" id="btn-record" onclick="toggleRecording()">🎙️</button>
             <button class="btn-icon" onclick="pulisciSchermo()">🗑️</button>
-            <button class="btn-icon">⋮</button>
         </div>
     </header>
 
-    <!-- STRUTTURA PRINCIPALE -->
     <div class="main-container">
 
         <!-- SIDEBAR STRUMENTI -->
@@ -252,16 +273,24 @@
                 🧹 <span>Gomma</span>
             </button>
 
-            <!-- SELEZIONE COLORI -->
+            <!-- SPESSORE TRATTO -->
+            <div class="size-picker">
+                <button onclick="setSize(2, this)" class="size-btn">S</button>
+                <button onclick="setSize(4, this)" class="size-btn active">M</button>
+                <button onclick="setSize(8, this)" class="size-btn">L</button>
+            </div>
+
+            <!-- PALETTE COLORI -->
             <div class="color-picker">
                 <div class="color-dot active" style="background: #526b5b;" onclick="setColor('#526b5b', this)"></div>
                 <div class="color-dot" style="background: #d8b7b0;" onclick="setColor('#d8b7b0', this)"></div>
                 <div class="color-dot" style="background: #f1c40f;" onclick="setColor('#f1c40f', this)"></div>
                 <div class="color-dot" style="background: #2980b9;" onclick="setColor('#2980b9', this)"></div>
+                <input type="color" id="customColor" onchange="setCustomColor(this.value)" style="width:22px; height:22px; border:none; background:none; cursor:pointer;">
             </div>
         </div>
 
-        <!-- FOGLIO A QUADRETTI -->
+        <!-- FOGLIO WORKSPACE -->
         <div class="workspace" id="workspace">
             <canvas id="canvas"></canvas>
             <div class="text-layer" id="text-layer"></div>
@@ -281,6 +310,7 @@
 
         let currentTool = 'pen';
         let currentColor = '#526b5b';
+        let currentSize = 4;
         let isDrawing = false;
 
         function initCanvas() {
@@ -321,18 +351,18 @@
             if (currentTool === 'pen') {
                 ctx.globalCompositeOperation = "source-over";
                 ctx.strokeStyle = currentColor;
-                ctx.lineWidth = 3;
+                ctx.lineWidth = currentSize;
                 ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
             } else if (currentTool === 'highlighter') {
                 ctx.globalCompositeOperation = "multiply";
-                ctx.strokeStyle = currentColor + "80"; // Semitrasparente
-                ctx.lineWidth = 14;
+                ctx.strokeStyle = currentColor + "70";
+                ctx.lineWidth = currentSize * 4;
                 ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
             } else if (currentTool === 'eraser') {
                 ctx.globalCompositeOperation = "destination-out";
-                ctx.lineWidth = 30;
+                ctx.lineWidth = currentSize * 6;
                 ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
             }
@@ -342,7 +372,7 @@
         canvas.addEventListener("pointerup", stopDrawing);
         canvas.addEventListener("pointerleave", stopDrawing);
 
-        // TESTO DA TASTIERA
+        // SCRITTURA TASTIERA
         workspace.addEventListener("click", (e) => {
             if (currentTool !== 'text' || e.target.classList.contains('text-box')) return;
             const rect = workspace.getBoundingClientRect();
@@ -366,6 +396,7 @@
             });
         }
 
+        // STRUMENTI E PARAMETRI
         function selectTool(tool) {
             currentTool = tool;
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
@@ -375,6 +406,17 @@
         function setColor(color, el) {
             currentColor = color;
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            if (el) el.classList.add('active');
+        }
+
+        function setCustomColor(color) {
+            currentColor = color;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+        }
+
+        function setSize(size, el) {
+            currentSize = size;
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
         }
 
