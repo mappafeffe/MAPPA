@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAPPA - FreeNotes Style</title>
+    <title>MAPPA - FreeNotes</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,9 +11,11 @@
 
     <style>
         :root {
-            --bg-main: #f8f1e8;
+            --bg-main: #f4ece1;
+            --sidebar-bg: #eae0d0;
             --accent-green: #526b5b;
             --accent-pink: #d8b7b0;
+            --accent-yellow: #f1c40f;
             --text-color: #4a4a4a;
         }
 
@@ -35,63 +37,128 @@
             overflow: hidden;
         }
 
+        /* BARRA SUPERIORE STILE FREENOTES */
         header {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            padding: 10px 20px;
+            background: rgba(244, 236, 225, 0.95);
+            padding: 8px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #e9dfd3;
+            border-bottom: 1px solid #dcd0c0;
             z-index: 10;
         }
 
+        .header-left, .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
         .title {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--accent-green);
         }
 
-        .tools {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        .btn-icon {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--accent-green);
+            padding: 5px 8px;
+            border-radius: 8px;
         }
 
-        button {
-            background: white;
-            border: 2px solid #e2d7cb;
-            padding: 8px 14px;
+        .btn-icon:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        /* STRUTTURA PRINCIPALE (SIDEBAR + WORKSPACE) */
+        .main-container {
+            display: flex;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* BARRA STRUMENTI LATERALE */
+        .toolbar-side {
+            width: 70px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid #dcd0c0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 15px;
+            gap: 12px;
+            z-index: 5;
+        }
+
+        .tool-btn {
+            width: 48px;
+            height: 48px;
             border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--accent-green);
+            border: none;
+            background: transparent;
+            font-size: 20px;
             cursor: pointer;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            color: var(--accent-green);
+            transition: all 0.2s;
         }
 
-        button.active {
-            background: var(--accent-green);
-            color: white;
+        .tool-btn span {
+            font-size: 9px;
+            margin-top: 2px;
+            font-weight: 600;
+        }
+
+        .tool-btn.active {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            color: var(--accent-green);
+        }
+
+        /* SELEZIONE COLORI */
+        .color-picker {
+            margin-top: auto;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .color-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .color-dot.active {
+            transform: scale(1.2);
             border-color: var(--accent-green);
         }
 
-        button.btn-record.recording {
-            background: #e74c3c;
-            color: white;
-            border-color: #e74c3c;
-        }
-
+        /* AREA QUADERNO / CANVAS */
         .workspace {
             position: relative;
             flex: 1;
             margin: 15px;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
             overflow: hidden;
+
+            /* Sfondo Quadretto / Dot Grid stile FreeNotes */
+            background-image: radial-gradient(#e0d7cb 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
         }
 
         #canvas {
@@ -120,7 +187,7 @@
             border: 1px dashed transparent;
             outline: none;
             font-family: 'Caveat', cursive;
-            font-size: 32px;
+            font-size: 30px;
             color: var(--accent-green);
             line-height: 1.2;
             user-select: text;
@@ -133,47 +200,76 @@
             border-radius: 8px;
         }
 
+        /* RECORDER BAR */
         .audio-bar {
             position: absolute;
             bottom: 15px;
             right: 15px;
             background: rgba(255, 255, 255, 0.95);
-            border: 2px solid var(--accent-pink);
+            border: 1px solid #e0d7cb;
             border-radius: 30px;
-            padding: 8px 18px;
+            padding: 6px 16px;
             display: none;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             z-index: 5;
         }
 
-        .audio-bar.active {
-            display: flex;
-        }
+        .audio-bar.active { display: flex; }
     </style>
 </head>
 <body>
 
+    <!-- BARRA SUPERIORE -->
     <header>
-        <div class="title">🌸 MAPPA</div>
-
-        <div class="tools">
-            <button id="btn-pen" class="active" onclick="selectTool('pen')">✏️ Penna</button>
-            <button id="btn-text" onclick="selectTool('text')">⌨️ Tastiera</button>
-            <button id="btn-eraser" onclick="selectTool('eraser')">🧹 Gomma</button>
-            <button class="btn-record" id="btn-record" onclick="toggleRecording()">🎙️ Registra</button>
-            <button onclick="pulisciSchermo()">🗑️ Pulisci</button>
+        <div class="header-left">
+            <button class="btn-icon">←</button>
+            <div class="title">Pedagogia Generale - Capitolo 1</div>
+        </div>
+        <div class="header-right">
+            <button class="btn-icon" id="btn-record" onclick="toggleRecording()">🎙️</button>
+            <button class="btn-icon" onclick="pulisciSchermo()">🗑️</button>
+            <button class="btn-icon">⋮</button>
         </div>
     </header>
 
-    <div class="workspace" id="workspace">
-        <canvas id="canvas"></canvas>
-        <div class="text-layer" id="text-layer"></div>
+    <!-- STRUTTURA PRINCIPALE -->
+    <div class="main-container">
 
-        <div class="audio-bar" id="audio-bar">
-            <span>🎙️ <strong id="rec-timer">00:00</strong></span>
-            <audio id="audio-player" controls style="height: 30px; display: none;"></audio>
+        <!-- SIDEBAR STRUMENTI -->
+        <div class="toolbar-side">
+            <button class="tool-btn active" id="btn-pen" onclick="selectTool('pen')">
+                ✏️ <span>Penna</span>
+            </button>
+            <button class="tool-btn" id="btn-highlighter" onclick="selectTool('highlighter')">
+                🖍️ <span>Evidenz.</span>
+            </button>
+            <button class="tool-btn" id="btn-text" onclick="selectTool('text')">
+                T <span>Testo</span>
+            </button>
+            <button class="tool-btn" id="btn-eraser" onclick="selectTool('eraser')">
+                🧹 <span>Gomma</span>
+            </button>
+
+            <!-- SELEZIONE COLORI -->
+            <div class="color-picker">
+                <div class="color-dot active" style="background: #526b5b;" onclick="setColor('#526b5b', this)"></div>
+                <div class="color-dot" style="background: #d8b7b0;" onclick="setColor('#d8b7b0', this)"></div>
+                <div class="color-dot" style="background: #f1c40f;" onclick="setColor('#f1c40f', this)"></div>
+                <div class="color-dot" style="background: #2980b9;" onclick="setColor('#2980b9', this)"></div>
+            </div>
+        </div>
+
+        <!-- FOGLIO A QUADRETTI -->
+        <div class="workspace" id="workspace">
+            <canvas id="canvas"></canvas>
+            <div class="text-layer" id="text-layer"></div>
+
+            <div class="audio-bar" id="audio-bar">
+                <span>🎙️ <strong id="rec-timer">00:00</strong></span>
+                <audio id="audio-player" controls style="height: 30px; display: none;"></audio>
+            </div>
         </div>
     </div>
 
@@ -184,9 +280,9 @@
         const textLayer = document.getElementById("text-layer");
 
         let currentTool = 'pen';
+        let currentColor = '#526b5b';
         let isDrawing = false;
 
-        // Inizializzazione pulita del Canvas
         function initCanvas() {
             canvas.width = workspace.clientWidth;
             canvas.height = workspace.clientHeight;
@@ -205,7 +301,6 @@
             };
         }
 
-        // GESTIONE TRATTO IPAD E TOUCH
         canvas.addEventListener("pointerdown", (e) => {
             if (currentTool === 'text') return;
             e.preventDefault();
@@ -225,8 +320,14 @@
 
             if (currentTool === 'pen') {
                 ctx.globalCompositeOperation = "source-over";
-                ctx.strokeStyle = "#526b5b";
+                ctx.strokeStyle = currentColor;
                 ctx.lineWidth = 3;
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            } else if (currentTool === 'highlighter') {
+                ctx.globalCompositeOperation = "multiply";
+                ctx.strokeStyle = currentColor + "80"; // Semitrasparente
+                ctx.lineWidth = 14;
                 ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
             } else if (currentTool === 'eraser') {
@@ -237,27 +338,15 @@
             }
         });
 
-        function stopDrawing(e) {
-            if (isDrawing) {
-                ctx.closePath();
-                isDrawing = false;
-            }
-        }
-
+        const stopDrawing = () => { if (isDrawing) { ctx.closePath(); isDrawing = false; } };
         canvas.addEventListener("pointerup", stopDrawing);
         canvas.addEventListener("pointerleave", stopDrawing);
-        canvas.addEventListener("pointercancel", stopDrawing);
 
-        // MODALITÀ TASTIERA
+        // TESTO DA TASTIERA
         workspace.addEventListener("click", (e) => {
-            if (currentTool !== 'text') return;
-            if (e.target.classList.contains('text-box')) return;
-
+            if (currentTool !== 'text' || e.target.classList.contains('text-box')) return;
             const rect = workspace.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            createNewTextBox(x, y);
+            createNewTextBox(e.clientX - rect.left, e.clientY - rect.top);
         });
 
         function createNewTextBox(x, y, text = "") {
@@ -266,25 +355,27 @@
             textBox.contentEditable = true;
             textBox.style.left = `${x}px`;
             textBox.style.top = `${y}px`;
+            textBox.style.color = currentColor;
             textBox.innerText = text;
 
             textLayer.appendChild(textBox);
-
             setTimeout(() => { textBox.focus(); }, 10);
 
             textBox.addEventListener("blur", () => {
-                if (textBox.innerText.trim() === "") {
-                    textBox.remove();
-                }
+                if (textBox.innerText.trim() === "") textBox.remove();
             });
         }
 
         function selectTool(tool) {
             currentTool = tool;
-            document.querySelectorAll('.tools button').forEach(b => {
-                if(b.id.startsWith('btn-')) b.classList.remove('active');
-            });
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${tool}`).classList.add('active');
+        }
+
+        function setColor(color, el) {
+            currentColor = color;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            el.classList.add('active');
         }
 
         function pulisciSchermo() {
@@ -293,11 +384,7 @@
         }
 
         // REGISTRATORE AUDIO
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-        let timerInterval;
-        let seconds = 0;
+        let mediaRecorder, audioChunks = [], isRecording = false, timerInterval, seconds = 0;
 
         async function toggleRecording() {
             const btnRecord = document.getElementById("btn-record");
@@ -310,36 +397,25 @@
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
-
                     mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
                     mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-                        audioPlayer.src = URL.createObjectURL(audioBlob);
+                        audioPlayer.src = URL.createObjectURL(new Blob(audioChunks, { type: 'audio/mp3' }));
                         audioPlayer.style.display = "block";
                     };
-
                     mediaRecorder.start();
                     isRecording = true;
-                    btnRecord.classList.add("recording");
-                    btnRecord.innerHTML = "⏹️ Ferma";
+                    btnRecord.style.color = "#e74c3c";
                     audioBar.classList.add("active");
-
                     seconds = 0;
                     timerInterval = setInterval(() => {
                         seconds++;
-                        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-                        const secs = (seconds % 60).toString().padStart(2, '0');
-                        timerEl.innerText = `${mins}:${secs}`;
+                        timerEl.innerText = `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
                     }, 1000);
-
-                } catch (err) {
-                    alert("Attiva i permessi per il microfono.");
-                }
+                } catch (err) { alert("Attiva i permessi per il microfono."); }
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
-                btnRecord.classList.remove("recording");
-                btnRecord.innerHTML = "🎙️ Registra";
+                btnRecord.style.color = "var(--accent-green)";
                 clearInterval(timerInterval);
             }
         }
