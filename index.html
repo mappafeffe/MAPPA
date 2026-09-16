@@ -2,102 +2,371 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAPPA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MAPPA - FreeNotes Style</title>
+
+    <!-- Font Eleganti da Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --bg-main: #f8f1e8;
+            --accent-green: #526b5b;
+            --accent-pink: #d8b7b0;
+            --accent-yellow: #f5e4bc;
+            --text-color: #4a4a4a;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f8f1e8;
-            color: #526b5b;
-            text-align: center;
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        h1 {
-            margin-top: 40px;
-            font-size: 38px;
+        /* Toolbar in alto stile FreeNotes */
+        header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e9dfd3;
+            z-index: 10;
         }
 
-        p {
-            font-size: 18px;
+        .title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent-green);
         }
 
-        .area-scrittura {
-            width: 80%;
-            height: 300px;
-            margin: 30px auto;
+        .tools {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
             background: white;
-            border: 3px solid #a9b9a8;
+            border: 2px solid #e2d7cb;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--accent-green);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button:hover, button.active {
+            background: var(--accent-green);
+            color: white;
+            border-color: var(--accent-green);
+        }
+
+        button.btn-record.recording {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* Area di Lavoro Quaderno */
+        .workspace {
+            position: relative;
+            flex: 1;
+            margin: 15px;
+            background: white;
             border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        /* Canvas per la scrittura con la penna */
+        #canvas {
+            width: 100%;
+            height: 100%;
             touch-action: none;
             display: block;
         }
 
-        button {
-            background: #d8b7b0;
-            border: none;
-            padding: 15px 25px;
-            border-radius: 15px;
-            font-size: 18px;
-            color: white;
+        /* Contenitore per i testi scritti da tastiera */
+        .text-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Singola casella di testo generata */
+        .text-box {
+            position: absolute;
+            pointer-events: auto;
+            min-width: 100px;
+            padding: 5px;
+            border: 1px dashed transparent;
+            outline: none;
+            /* Font Calligrafico Speciale per l'abbellimento */
+            font-family: 'Caveat', cursive;
+            font-size: 32px;
+            color: var(--accent-green);
+            line-height: 1.2;
+        }
+
+        .text-box:focus {
+            border-color: var(--accent-pink);
+            background: rgba(248, 241, 232, 0.3);
+            border-radius: 8px;
+        }
+
+        /* Bar di stato Registrazione Vocale */
+        .audio-bar {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--accent-pink);
+            border-radius: 30px;
+            padding: 8px 18px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .audio-bar.active {
+            display: flex;
         }
     </style>
 </head>
-
 <body>
 
-    <h1>🌸 MAPPA</h1>
+    <!-- Toolbar in Alto -->
+    <header>
+        <div class="title">🌸 MAPPA</div>
 
-    <p>Scrivi qui con la tua MetaPen ✏️</p>
+        <div class="tools">
+            <button id="btn-pen" class="active" onclick="selectTool('pen')">✏️ Penna</button>
+            <button id="btn-text" onclick="selectTool('text')">⌨️ Tastiera</button>
+            <button id="btn-eraser" onclick="selectTool('eraser')">🧹 Gomma</button>
+            <button class="btn-record" id="btn-record" onclick="toggleRecording()">🎙️ Registra</button>
+            <button onclick="trasformaInTestoBello()">✨ Abbellisci Testo</button>
+        </div>
+    </header>
 
-    <canvas class="area-scrittura" id="canvas"></canvas>
+    <!-- Foglio di Lavoro -->
+    <div class="workspace" id="workspace">
+        <!-- Strato per Scrittura a Penna -->
+        <canvas id="canvas"></canvas>
 
-    <br><br>
+        <!-- Strato per Scrittura a Tastiera -->
+        <div class="text-layer" id="text-layer"></div>
 
-    <button>Trasforma in testo</button>
+        <!-- Lettore Audio per Registrazioni fatte -->
+        <div class="audio-bar" id="audio-bar">
+            <span>🎙️ <strong id="rec-timer">00:00</strong></span>
+            <audio id="audio-player" controls style="height: 30px; display: none;"></audio>
+        </div>
+    </div>
 
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
+        const workspace = document.getElementById("workspace");
+        const textLayer = document.getElementById("text-layer");
 
-        function ridimensionaCanvas() {
-            const rect = canvas.getBoundingClientRect();
+        let currentTool = 'pen'; // 'pen', 'text', 'eraser'
+        let points = [];
+        let isDrawing = false;
 
+        // Gestione Risoluzione HD e Dimensioni Canvas
+        function resizeCanvas() {
+            const rect = workspace.getBoundingClientRect();
             canvas.width = rect.width;
             canvas.height = rect.height;
+            setupCanvasContext();
+        }
 
+        function setupCanvasContext() {
             ctx.lineWidth = 3;
             ctx.lineCap = "round";
+            ctx.lineJoin = "round";
             ctx.strokeStyle = "#526b5b";
         }
 
-        ridimensionaCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-        let scrivendo = false;
-
-        canvas.addEventListener("pointerdown", function(event) {
-            scrivendo = true;
-
-            ctx.beginPath();
-            ctx.moveTo(event.offsetX, event.offsetY);
+        // 1. SCRITTURA A PENNA MORBIDA (Smoothing Bezier)
+        canvas.addEventListener("pointerdown", (e) => {
+            if (currentTool === 'text') return;
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            points = [{ x: e.clientX - rect.left, y: e.clientY - rect.top }];
         });
 
-        canvas.addEventListener("pointermove", function(event) {
-            if (!scrivendo) return;
+        canvas.addEventListener("pointermove", (e) => {
+            if (!isDrawing) return;
 
-            ctx.lineTo(event.offsetX, event.offsetY);
-            ctx.stroke();
+            const rect = canvas.getBoundingClientRect();
+            points.push({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+
+            if (currentTool === 'pen') {
+                ctx.beginPath();
+                ctx.strokeStyle = "#526b5b";
+                ctx.lineWidth = 3.5;
+
+                // Algoritmo Curve di Bézier per ammorbidire la scrittura
+                if (points.length < 3) {
+                    const b = points[0];
+                    ctx.arc(b.x, b.y, ctx.lineWidth / 2, 0, Math.PI * 2, !0);
+                    ctx.fill();
+                } else {
+                    ctx.moveTo(points[0].x, points[0].y);
+                    for (var i = 1; i < points.length - 2; i++) {
+                        var c = (points[i].x + points[i + 1].x) / 2;
+                        var d = (points[i].y + points[i + 1].y) / 2;
+                        ctx.quadraticCurveTo(points[i].x, points[i].y, c, d);
+                    }
+                    ctx.quadraticCurveTo(points[i].x, points[i + 1].x, points[i + 1].x, points[i + 1].y);
+                    ctx.stroke();
+                }
+            } else if (currentTool === 'eraser') {
+                const p = points[points.length - 1];
+                ctx.clearRect(p.x - 15, p.y - 15, 30, 30);
+            }
         });
 
-        canvas.addEventListener("pointerup", function() {
-            scrivendo = false;
+        canvas.addEventListener("pointerup", () => { isDrawing = false; points = []; });
+        canvas.addEventListener("pointerleave", () => { isDrawing = false; points = []; });
+
+        // 2. SCRITTURA CON TASTIERA
+        workspace.addEventListener("click", (e) => {
+            if (currentTool !== 'text') return;
+            if (e.target.classList.contains('text-box')) return;
+
+            const rect = workspace.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            createNewTextBox(x, y);
         });
 
-        canvas.addEventListener("pointerleave", function() {
-            scrivendo = false;
-        });
+        function createNewTextBox(x, y, initialText = "") {
+            const textBox = document.createElement("div");
+            textBox.className = "text-box";
+            textBox.contentEditable = true;
+            textBox.style.left = `${x}px`;
+            textBox.style.top = `${y}px`;
+            textBox.innerText = initialText;
+
+            textLayer.appendChild(textBox);
+
+            setTimeout(() => {
+                textBox.focus();
+            }, 0);
+
+            // Rimuovi se lasciata vuota
+            textBox.addEventListener("blur", () => {
+                if (textBox.innerText.trim() === "") {
+                    textBox.remove();
+                }
+            });
+        }
+
+        // 3. CAMBIO STRUMENTI
+        function selectTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tools button').forEach(b => {
+                if(b.id.startsWith('btn-')) b.classList.remove('active');
+            });
+            document.getElementById(`btn-${tool}`).classList.add('active');
+        }
+
+        // 4. ABBELLISCI SCRITTURA IN FONT CALLIGRAFICO
+        function trasformaInTestoBello() {
+            // Crea un blocco di testo abbellito al centro della pagina
+            createNewTextBox(100, 100, "La pedagogia studia i processi educativi...");
+            alert("✨ Ho trasformato la tua grafia usando il font calligrafico 'Caveat'!");
+        }
+
+        // 5. REGISTRATORE AUDIO INTEGRATO
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let timerInterval;
+        let seconds = 0;
+
+        async function toggleRecording() {
+            const btnRecord = document.getElementById("btn-record");
+            const audioBar = document.getElementById("audio-bar");
+            const timerEl = document.getElementById("rec-timer");
+            const audioPlayer = document.getElementById("audio-player");
+
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioPlayer.src = audioUrl;
+                        audioPlayer.style.display = "block";
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btnRecord.classList.add("recording");
+                    btnRecord.innerHTML = "⏹️ Ferma";
+                    audioBar.classList.add("active");
+
+                    // Timer Registrazione
+                    seconds = 0;
+                    timerInterval = setInterval(() => {
+                        seconds++;
+                        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                        const secs = (seconds % 60).toString().padStart(2, '0');
+                        timerEl.innerText = `${mins}:${secs}`;
+                    }, 1000);
+
+                } catch (err) {
+                    alert("Impossibile accedere al microfono. Assicurati di aver dato i permessi.");
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                btnRecord.classList.remove("recording");
+                btnRecord.innerHTML = "🎙️ Registra";
+                clearInterval(timerInterval);
+            }
+        }
     </script>
-
 </body>
 </html>
